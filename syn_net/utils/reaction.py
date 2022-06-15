@@ -15,8 +15,7 @@ from syn_net.utils.utils import InvalidSmirksError, MolLike
 
 
 class Reaction:
-    """
-    This class models a chemical reaction based on a SMARTS transformation.
+    """a chemical reaction based on a SMARTS transformation.
 
     Args:
         template (str): SMARTS string representing a chemical reaction.
