@@ -3,25 +3,26 @@ This file contains various utils for decoding synthetic trees using beam search.
 """
 import numpy as np
 from rdkit import Chem
-from syn_net.utils.data_utils import SyntheticTree
+from scipy.special import softmax
 from sklearn.neighbors import BallTree, KDTree
-from syn_net.utils.predict_utils import *
 
+from syn_net.utils.predict_utils import *
+from syn_net.utils.data_utils import SyntheticTree
 
 np.random.seed(6)
 
 
-def softmax(x):
-    """
-    Computes softmax values for each sets of scores in x.
+# def softmax(x):
+#     """
+#     Computes softmax values for each sets of scores in x.
 
-    Args:
-        x (np.ndarray or list): Values to normalize.
-    Returns:
-        (np.ndarray): Softmaxed values.
-    """
-    e_x = np.exp(x - np.max(x))
-    return e_x / e_x.sum(axis=0)
+#     Args:
+#         x (np.ndarray or list): Values to normalize.
+#     Returns:
+#         (np.ndarray): Softmaxed values.
+#     """
+#     e_x = np.exp(x - np.max(x))
+#     return e_x / e_x.sum(axis=0)
 
 def nn_search(_e, _tree, _k=1):
     """
@@ -118,7 +119,7 @@ def synthetic_tree_decoder(z_target,
             # beam search for mol1 candidates
             dist, ind = nn_search(z_mol1, _tree=kdtree, _k=min(len(bb_emb), beam_width))
             try:
-                mol1_probas = softmax(- 0.1 * dist)
+                mol1_probas = softmax(- 0.1 * dist, 0)
                 mol1_nlls = -np.log(mol1_probas)
             except:  # exception for beam search of length 1
                 mol1_nlls = [-np.log(0.5)]
@@ -195,7 +196,7 @@ def synthetic_tree_decoder(z_target,
                     available_tree = BallTree(temp_emb, metric=cosine_distance)
                     dist, ind = nn_search(z_mol2, _tree=available_tree, _k=min(len(temp_emb), beam_width))
                     try:
-                        mol2_probas = softmax(-dist)
+                        mol2_probas = softmax(-dist, 0)
                         mol2_nll = -np.log(mol2_probas)[0]
                     except:
                         mol2_nll = 0.0
@@ -343,7 +344,7 @@ def synthetic_tree_decoder_fullbeam(z_target,
             # beam search for mol1 candidates
             dist, ind = nn_search(z_mol1, _tree=kdtree, _k=min(len(bb_emb), beam_width))
             try:
-                mol1_probas = softmax(- 0.1 * dist)
+                mol1_probas = softmax(- 0.1 * dist, 0)
                 mol1_nlls = -np.log(mol1_probas)
             except:  # exception for beam search of length 1
                 mol1_nlls = [-np.log(0.5)]
@@ -418,7 +419,7 @@ def synthetic_tree_decoder_fullbeam(z_target,
                         available_tree = KDTree(temp_emb, metric='euclidean')
                         dist, ind = nn_search(z_mol2, _tree=available_tree, _k=min(len(temp_emb), beam_width))
                         try:
-                            mol2_probas = softmax(-dist)
+                            mol2_probas = softmax(-dist, 0)
                             mol2_nlls = rxn_nll - np.log(mol2_probas)
                         except:
                             mol2_nlls = [rxn_nll + 0.0]

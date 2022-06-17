@@ -33,18 +33,18 @@ class ReactionNode:
 class SyntheticTree:
     def __init__(
         self,
-        chemicals: list[ChemicalNode],
-        reactions: list[ReactionNode],
-        root: ChemicalNode,
-        depth: int,
-        actions: list[Action],
-        rxn_id2type: dict[int, int],
+        chemicals: Optional[list[ChemicalNode]] = None,
+        reactions: Optional[list[ReactionNode]] = None,
+        root: Optional[ChemicalNode] = None,
+        depth: int = 0,
+        actions: Optional[list[Action]] = None,
+        rxn_id2type: Optional[dict[int, int]] = None,
     ):
-        self.chemicals = chemicals
-        self.reactions = reactions
+        self.chemicals = chemicals or []
+        self.reactions = reactions or []
         self.root = root
         self.depth = depth
-        self.actions = actions
+        self.actions = actions or []
         self.rxn_id2type = rxn_id2type
 
     @classmethod

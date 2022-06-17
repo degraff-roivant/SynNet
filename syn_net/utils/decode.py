@@ -10,6 +10,7 @@ from syn_net.utils.predict_utils import get_reaction_mask
 from syn_net.utils.tree import SyntheticTree
 from syn_net.utils.utils import Action
 
+
 def mol_fp(smi, radius=2, length=4096):
     """
     Computes the Morgan fingerprint for the input SMILES.
@@ -36,7 +37,8 @@ def mol_fp(smi, radius=2, length=4096):
     Chem.DataStructs.ConvertToNumpyArray(fp, x)
 
     return x
-    
+
+
 def nn_search(x, tree):
     """find the nearest neighbor to `x` in the input tree.
 
@@ -106,21 +108,21 @@ def get_action_mask(state, rxns):
     """
     if len(state) == 0:
         return np.array([1, 0, 0, 0])
-    
+
     if len(state) == 1:
         return np.array([1, 1, 0, 1])
-    
+
     if len(state) == 2:
         can_react_, _ = can_react(state, rxns)
         if can_react_:
             return np.array([0, 1, 1, 0])
 
         return np.array([0, 1, 0, 0])
-    
-    raise ValueError('Problem with state.')
+
+    raise ValueError("Problem with state.")
 
 
-def get_mol_embedding(smi, model, device='cpu', readout=AvgPooling()):
+def get_mol_embedding(smi, model, device="cpu", readout=AvgPooling()):
     """
     Computes the molecular graph embedding for the input SMILES.
 
@@ -136,15 +138,22 @@ def get_mol_embedding(smi, model, device='cpu', readout=AvgPooling()):
         torch.Tensor: Learned embedding for the input molecule.
     """
     mol = Chem.MolFromSmiles(smi)
-    g = mol_to_bigraph(mol, add_self_loop=True,
-                       node_featurizer=PretrainAtomFeaturizer(),
-                       edge_featurizer=PretrainBondFeaturizer(),
-                       canonical_atom_order=False)
+    g = mol_to_bigraph(
+        mol,
+        add_self_loop=True,
+        node_featurizer=PretrainAtomFeaturizer(),
+        edge_featurizer=PretrainBondFeaturizer(),
+        canonical_atom_order=False,
+    )
     bg = g.to(device)
-    nfeats = [bg.ndata.pop('atomic_number').to(device),
-              bg.ndata.pop('chirality_type').to(device)]
-    efeats = [bg.edata.pop('bond_type').to(device),
-              bg.edata.pop('bond_direction_type').to(device)]
+    nfeats = [
+        bg.ndata.pop("atomic_number").to(device),
+        bg.ndata.pop("chirality_type").to(device),
+    ]
+    efeats = [
+        bg.edata.pop("bond_type").to(device),
+        bg.edata.pop("bond_direction_type").to(device),
+    ]
     with torch.no_grad():
         node_repr = model(bg, nfeats, efeats)
     return readout(bg, node_repr).detach().cpu().numpy()[0]
@@ -177,19 +186,22 @@ def set_embedding(z_target, state, nbits, _mol_embedding=get_mol_embedding):
         e2 = _mol_embedding(state[1])
     return np.concatenate([e1, e2, z_target], axis=1)
 
-def synthetic_tree_decoder(z_target,
-                           building_blocks,
-                           bb_dict,
-                           reaction_templates,
-                           mol_embedder,
-                           action_net,
-                           reactant1_net,
-                           rxn_net,
-                           reactant2_net,
-                           bb_emb,
-                           rxn_template,
-                           n_bits,
-                           max_step=15):
+
+def synthetic_tree_decoder(
+    z_target,
+    building_blocks,
+    bb_dict,
+    reaction_templates,
+    mol_embedder,
+    action_net,
+    reactant1_net,
+    rxn_net,
+    reactant2_net,
+    bb_emb,
+    rxn_template,
+    n_bits,
+    max_step=15,
+):
     """
     Computes the synthetic tree given an input molecule embedding, using the
     Action, Reaction, Reactant1, and Reactant2 networks and a greedy search
@@ -216,15 +228,13 @@ def synthetic_tree_decoder(z_target,
         act (int): The final action (to know if the tree was "properly"
             terminated).
     """
-    # Initialization
     tree = SyntheticTree()
     kdtree = BallTree(bb_emb, metric="cosine")
     mol_recent = None
 
-    # Start iteration
-    for i in range(max_step):
+    for _ in range(max_step):
         # Encode current state
-        state = tree.get_state() # a set
+        state = tree.get_state()  # a set
         z_state = set_embedding(z_target, state, nbits=n_bits, _mol_embedding=mol_fp)
 
         # Predict action type, masked selection
@@ -249,10 +259,14 @@ def synthetic_tree_decoder(z_target,
 
         # Select reaction
         try:
-            reaction_proba = rxn_net(torch.tensor(np.concatenate([z_state, z_mol1], axis=1)))
+            reaction_proba = rxn_net(
+                torch.tensor(np.concatenate([z_state, z_mol1], axis=1))
+            )
         except:
             z_mol1 = np.expand_dims(z_mol1, axis=0)
-            reaction_proba = rxn_net(torch.tensor(np.concatenate([z_state, z_mol1], axis=1)))
+            reaction_proba = rxn_net(
+                torch.tensor(np.concatenate([z_state, z_mol1], axis=1))
+            )
         reaction_proba = reaction_proba.squeeze().detach().numpy() + 1e-10
 
         if act != Action.MERGE:
@@ -277,9 +291,9 @@ def synthetic_tree_decoder(z_target,
                 mol2 = temp.pop()
             else:
                 # Add or Expand
-                if rxn_template == 'hb':
+                if rxn_template == "hb":
                     num_rxns = 91
-                elif rxn_template == 'pis':
+                elif rxn_template == "pis":
                     num_rxns = 4700
                 else:
                     num_rxns = 3  # unit testing uses only 3 reaction templates

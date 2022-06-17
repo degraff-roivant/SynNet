@@ -1,4 +1,4 @@
-name: synthenv
+name: synnet
 channels:
   - pytorch
   - nvidia
