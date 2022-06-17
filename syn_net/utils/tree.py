@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict
 import gzip
 import json
 from os import PathLike
-from typing import Optional, Sequence
+from typing import Iterator, Optional, Sequence
 
 from syn_net.utils.utils import Action, ReactionType
 
@@ -298,6 +298,12 @@ class SyntheticTreeSet:
     def __init__(self, trees: Optional[Sequence[SyntheticTree]] = None):
         self.sts = trees or []
 
+    def __len__(self):
+        return len(self.sts)
+    
+    def __iter__(self) -> Iterator[SyntheticTree]:
+        return iter(self.sts)
+        
     @classmethod
     def load(cls, path: PathLike) -> SyntheticTreeSet:
         """
@@ -324,8 +330,6 @@ class SyntheticTreeSet:
         with gzip.open(path, "wb") as f:
             f.write(json.dumps(sts).encode("utf-8"))
 
-    def __len__(self):
-        return len(self.sts)
 
     def debug(self, x: int = 3):
         for st in self.sts[:x]:

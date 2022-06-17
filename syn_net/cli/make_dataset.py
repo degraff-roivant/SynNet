@@ -2,13 +2,11 @@
 This file generates synthetic tree data in a sequential fashion.
 """
 from argparse import ArgumentParser
-import gzip
 from pathlib import Path
 
 import dill as pickle
 import pandas as pd
 import numpy as np
-
 
 from tqdm import tqdm
 from syn_net.utils.tree import SyntheticTreeSet
@@ -16,10 +14,9 @@ from syn_net.utils.prep import generate_synthetic_tree
 from syn_net.utils.utils import Action
 
 
-
 if __name__ == '__main__':
-    path_reaction_file = '/home/whgao/shared/Data/scGen/reactions_pis.pickle.gz'
-    path_to_building_blocks = '/home/whgao/shared/Data/scGen/enamine_building_blocks_nochiral_matched.csv.gz'
+    # path_reaction_file = '/home/whgao/shared/Data/scGen/reactions_pis.pickle.gz'
+    # path_to_building_blocks = '/home/whgao/shared/Data/scGen/enamine_building_blocks_nochiral_matched.csv.gz'
 
     parser = ArgumentParser()
     parser.add_argument("-r", "--reactions-pkl", type=Path)
@@ -35,13 +32,14 @@ if __name__ == '__main__':
     #     rxns = pickle.load(f)
 
     T = 5
+    MAX_STEPS = 15
+
     num_finish = 0
     num_error = 0
     num_unfinish = 0
-
     trees = []
     for _ in tqdm(range(T)):
-        tree, action = generate_synthetic_tree(building_blocks, rxns, max_step=15)
+        tree, action = generate_synthetic_tree(building_blocks, rxns, MAX_STEPS)
         if action == Action.END:
             trees.append(tree)
             num_finish += 1
