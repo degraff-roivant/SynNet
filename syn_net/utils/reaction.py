@@ -128,7 +128,7 @@ class Reaction:
             )
 
     @property
-    def available_reactants(self) -> list[list[str]]:
+    def available_reactants(self) -> tuple[list[str]]:
         return self.__available_reactants
 
     @available_reactants.setter

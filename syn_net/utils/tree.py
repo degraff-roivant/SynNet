@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict
 import gzip
 import json
 from os import PathLike
-from typing import Optional
+from typing import Optional, Sequence
 
 from syn_net.utils.utils import Action, ReactionType
 
@@ -287,8 +287,7 @@ class SyntheticTree:
 
 
 class SyntheticTreeSet:
-    """
-    A class representing a set of synthetic trees, for saving and loading purposes.
+    """A set of synthetic trees, for saving and loading purposes.
 
     Arritbute:
         sts (list): Contains `SyntheticTree`s. One can initialize the class with
@@ -296,7 +295,7 @@ class SyntheticTreeSet:
             list is created.
     """
 
-    def __init__(self, trees: Optional[list[SyntheticTree]] = None):
+    def __init__(self, trees: Optional[Sequence[SyntheticTree]] = None):
         self.sts = trees or []
 
     @classmethod
