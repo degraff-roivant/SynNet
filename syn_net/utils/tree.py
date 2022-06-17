@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict
 import gzip
 import json
 from os import PathLike
-from typing import Iterator, Optional, Sequence
+from typing import Iterator, Optional, Sequence, Union
 
 from syn_net.utils.utils import Action, ReactionType
 
@@ -303,6 +303,9 @@ class SyntheticTreeSet:
     
     def __iter__(self) -> Iterator[SyntheticTree]:
         return iter(self.sts)
+    
+    def __getitem__(self, idx: Union[int, slice]):
+        return self.sts[idx]
         
     @classmethod
     def load(cls, path: PathLike) -> SyntheticTreeSet:
